@@ -6,7 +6,6 @@ from datetime import datetime
 
 # Generates the file name based on the current month and year
 def generate_file_name():
-    """Generate the CSV file name based on the current month and year."""
     today = datetime.today()
     return f"expenses_{today.year}_{today.month:02d}.csv"
 
@@ -33,6 +32,27 @@ def add_expense():
         writer.writerow([date, category, amount_colones, amount_dollars, description])
     
     print(f"\n✅ Expense successfully added to {expense_file} file.\n")
+
+# Displays expenses for a specific month
+def view_expenses():
+    month = input("View expenses for which month (YYYY-MM): ") or datetime.today().strftime('%Y-%m')
+    expense_file = f"expenses_{month.replace('-', '_')}.csv"
+
+    # Check if the file exists
+    if not os.path.exists(expense_file):
+        print("\n📌 No expenses recorded for that month.\n")
+        return
+
+    df = pd.read_csv(expense_file)
+    # Check if the file is empty
+    if df.empty:
+        print("\n📌 No expenses recorded yet.\n")
+        return
+
+    # Display expenses in a table format
+    print(f"\n📜 Expenses for {month}:\n")
+    print(tabulate(df, headers="keys", tablefmt="grid"))
+
 
 def main():
     initialize_file()
