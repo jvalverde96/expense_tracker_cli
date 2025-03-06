@@ -54,9 +54,69 @@ def view_expenses():
     print(tabulate(df, headers="keys", tablefmt="grid"))
 
 
+# Generates a monthly expense report
+def generate_monthly_report():
+    """Generate a summary of expenses for a specific month."""
+    month = input("Generate report for which month (YYYY-MM): ") or datetime.today().strftime('%Y-%m')
+    expense_file = f"expenses_{month.replace('-', '_')}.csv"
+
+    # Check if the file exists
+    if not os.path.exists(expense_file):
+        print("\n📌 No expenses recorded for that month.\n")
+        return
+    
+    # Load the CSV file into a DataFrame
+    df = pd.read_csv(expense_file)
+    
+    # Convert the 'Amount (Colones)' and 'Amount (Dollars)' columns to numeric, handle errors if any
+    df["Amount (Colones)"] = pd.to_numeric(df["Amount (Colones)"], errors="coerce")
+    df["Amount (Dollars)"] = pd.to_numeric(df["Amount (Dollars)"], errors="coerce")
+
+    # Calculate total expenses in both currencies
+    total_colones = df["Amount (Colones)"].sum()
+    total_dollars = df["Amount (Dollars)"].sum()
+
+    # Calculate category-wise summary in both currencies
+    category_summary_colones = df.groupby("Category")["Amount (Colones)"].sum()
+    category_summary_dollars = df.groupby("Category")["Amount (Dollars)"].sum()
+
+    # Display the report in a table format
+    print(f"\n📊 Report for {month}:")
+    print(f"\n💰 Total Spent:")
+    print(f"   - Colones: ₡{total_colones:.2f}")
+    print(f"   - Dollars: ${total_dollars:.2f}\n")
+
+    print("📋 Expenses by Category (Colones):")
+    print(tabulate(category_summary_colones.reset_index(), headers=["Category", "Total (Colones)"], tablefmt="grid"))
+
+    print("\n📋 Expenses by Category (Dollars):")
+    print(tabulate(category_summary_dollars.reset_index(), headers=["Category", "Total (Dollars)"], tablefmt="grid"))
+
+
 def main():
     initialize_file()
-    print("Main")
+    while True:
+        # Display the main menu
+        print("\n📌 Expense Tracker CLI")
+        print("1️⃣ Add Expense")
+        print("2️⃣ View Expenses by Month")
+        print("3️⃣ Generate Monthly Report")
+        print("4️⃣ Exit")
+        
+        choice = input("\nSelect an option: ")
+
+        # Execute the appropriate function based on user choice
+        if choice == "1":
+            add_expense()
+        elif choice == "2":
+            view_expenses()
+        elif choice == "3":
+            generate_monthly_report()
+        elif choice == "4":
+            print("\n👋 Exiting Expense Tracker. See you next time!\n")
+            break
+        else:
+            print("\n⚠️ Invalid choice! Please try again.\n")
 
 if __name__ == "__main__":
     main()
