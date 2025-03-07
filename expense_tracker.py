@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from datetime import datetime
 import csv
+from tabulate import tabulate
 
 month_names = [
     "January", "February", "March", "April", "May", "June",
@@ -79,14 +80,14 @@ def add_expense():
 def view_expenses():
     print("View Expenses Per Month 📅")
     while True:
-        date = input("View expenses for which (YYYY-MM): or press Enter for current month: ") or datetime.today().strftime('%Y-%m-%d')
+        date = input("View expenses for which (YYYY-MM): or press Enter for current month: ") or datetime.today().strftime('%Y-%m')
         # Validate date format
         try:
             # Try to parse the date with the expected format
-            datetime.strptime(date, '%Y-%m-%d')
+            datetime.strptime(date, '%Y-%m')
             break  # If no error, the date is valid, so break the loop
         except ValueError:
-            print("\n⚠️ Invalid date format. Please use the format YYYY-MM-DD or press Enter for current month.\n")
+            print("\n⚠️ Invalid date format. Please use the format YYYY-MM or press Enter for current month.\n")
     # Split the month_year into year and month
     year, month = map(int, date.split('-'))
     
@@ -102,23 +103,27 @@ def view_expenses():
 
     df = pd.read_csv(expense_file)
 
+    # Replace NaN values with 0 in the Amount (Dollars) column
+    df["Amount (Dollars)"] = df["Amount (Dollars)"].fillna(0)
+    df["Amount (Colones)"] = df["Amount (Colones)"].fillna(0)
+
     # Display expenses in a table format
     print(f"\n📜 Expenses for {month_name} {year}:\n")
-    print(df)
+    print(tabulate(df, headers="keys", tablefmt="grid", showindex=False))
 
 # Generates a monthly expense report
 def generate_monthly_report():
     print("Generate a Summary of Expenses for a Specific Month. 📊")
     while True:
-        date = input("Generate report for which month (YYYY-MM) or press Enter for current month): ") or datetime.today().strftime('%Y-%m-%d')
+        date = input("Generate report for which month (YYYY-MM) or press Enter for current month): ") or datetime.today().strftime('%Y-%m')
 
         # Validate date format
         try:
             # Try to parse the date with the expected format
-            datetime.strptime(date, '%Y-%m-%d')
+            datetime.strptime(date, '%Y-%m')
             break  # If no error, the date is valid, so break the loop
         except ValueError:
-            print("\n⚠️ Invalid date format. Please use the format YYYY-MM-DD or press Enter for current month.\n")
+            print("\n⚠️ Invalid date format. Please use the format YYYY-MM or press Enter for current month.\n")
 
     # Split the month_year into year and month
     year, month = map(int, date.split('-'))
@@ -150,9 +155,19 @@ def generate_monthly_report():
     print(f"   - Colones: ₡{total_colones:.2f}")
     print(f"   - Dollars: ${total_dollars:.2f}\n")
 
-    # Display all fields in the report
+    table_data = df.apply(
+        lambda row: [
+            row["Date"],
+            row["Category"],
+            f'₡{row["Amount (Colones)"]:.2f}',
+            f'${row["Amount (Dollars)"]:.2f}',
+            row["Description"]
+        ], axis=1).tolist()
+
     print("📋 Full Expenses Report:")
-    print(df)
+    print(tabulate(table_data, headers=["Date", "Category", "Amount (Colones)", "Amount (Dollars)", "Description"], 
+                   tablefmt="fancy_grid", stralign="center", numalign="center", 
+                   colalign=("center", "center", "center", "center", "center")))
 
 def main():
     while True:
